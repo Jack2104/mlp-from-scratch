@@ -20,6 +20,7 @@ class MLP:
     def __init__(
         self,
         activation_function,
+        activation_derivative,
         hidden_layers,
         hidden_units,
         input_units,
@@ -29,6 +30,7 @@ class MLP:
         initial_weights=None,
     ):
         self.activation_function = activation_function
+        self.activation_derivative = activation_derivative
 
         self.hidden_layers = hidden_layers
         self.hidden_units = hidden_units
@@ -97,10 +99,43 @@ class MLP:
     def backpropagate(self, x, y):
         h_w, a = self.forward_propagate(x)
         err = self.sub(h_w, y)  # err[i] is the individual error of output neuron i
+        L = len(self.weights) - 1
 
-        deltas = []
+        deltas = [
+            err[i]
+            * self.activation_derivative(
+                self.dot(a[L - 1], self.get_incoming_weights(L, i))
+            )
+            for i in self.output_units
+        ]
 
-        pass
+        # Backpropagate
+        for l in range(L, 0, -1):
+            new_deltas = []
+
+            if l > 0:
+                prev_unit_count = self.hidden_units if l > 1 else self.output_units
+
+                for i in range(prev_unit_count):
+                    curr_weights = self.weights[l][i]
+
+                    value = self.dot(a[L - 1], self.get_incoming_weights(L, i))
+                    value_dev = self.activation_derivative(value)
+                    prop_delta = sum(
+                        [curr_weights[j] * deltas[j] for j in range(len(curr_weights))]
+                    )
+
+                    new_deltas.append(prop_delta * value_dev)
+
+            # Update weights using gradient descent
+            for i, neuron_weights in enumerate(self.weights[l]):
+                self.weights[l][i] = [
+                    w + self.learning_rate * deltas[j] * self.values[l][i]
+                    for w, j in enumerate(neuron_weights[i])
+                ]
+
+            if l > 0:
+                deltas = new_deltas
 
     def train(self, epochs):
         pass
