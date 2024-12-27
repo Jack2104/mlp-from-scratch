@@ -10,6 +10,11 @@ def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
 
+def sigmoid_derivative(x):
+    s = sigmoid(x)
+    return s * (1 - s)
+
+
 class MLP:
     def __init__(
         self,
