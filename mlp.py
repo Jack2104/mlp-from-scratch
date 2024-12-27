@@ -1,8 +1,6 @@
 import math
 import random
 
-import numpy as np
-
 
 def parse_image():
     pass
@@ -10,10 +8,6 @@ def parse_image():
 
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
-
-
-def softmax():
-    return
 
 
 class MLP:
@@ -81,6 +75,10 @@ class MLP:
     def sub(self, x1, x2):
         return [x1[i] - x2[i] for i in min(len(x1), len(x2))]
 
+    def softmax(self, z):
+        total = sum([math.exp(z_j) for z_j in z])
+        return [math.exp(z_i) / total for z_i in z]
+
     def forward_propagate(self, x):
         h_t = x
         values = []
@@ -98,7 +96,7 @@ class MLP:
 
     def backpropagate(self, x, y):
         h_w, a = self.forward_propagate(x)
-        err = self.sub(h_w, y)  # err[i] is the individual error of output neuron i
+        err = self.sub(y, h_w)  # err[i] is the individual error of output neuron i
         L = len(self.weights) - 1
 
         deltas = [
@@ -138,10 +136,17 @@ class MLP:
                 deltas = new_deltas
 
     def train(self, epochs):
-        pass
+        for _ in epochs:
+            for sample in self.training_set:
+                self.backpropagate(sample[0], sample[1])
 
-    def evaluate(self):
-        pass
+    def test(self, x, y):
+        outputs, _ = self.forward_propagate(x)
+        return self.sub(y, outputs)
+
+    def evaluate(self, x):
+        outputs, _ = self.forward_propagate(x)
+        return self.softmax(outputs)
 
 
 def run(image):
